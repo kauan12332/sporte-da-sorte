@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Esporte da Sorte - Jogos ao Vivo</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #0f0;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #0f0;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo{
+        display: block;
+        margin: 0 auto 20px;
+        height: 100px;
+        border-radius: 10%;
+    }
+
+     .container {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .butt {
+      display: inline-block;
+      margin-top: 20px;
+      background-color: #00ff88;
+      color: #000;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.3s ease;
+    }
+    .butt:hover{
+        background-color: #016a37;
+    }
+
+    #listaJogos {
+      list-style: none;
+      padding: 0;
+    }
+
+    #listaJogos li {
+      background: #111;
+      border: 1px solid #0f0;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #0f0;
+    }
+
+    .time {
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .placar {
+      font-size: 18px;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+
+    <img src="img/logo.png" alt="logo" class="logo">
+  <h1>Esporte da Sorte - Jogos ao Vivo</h1>
+  <ul id="listaJogos">Carregando jogos...</ul>
+
+  <div class="container">
+    <a href="index.html" class="butt">Voltar</a>
+  </div>
+
+  <script>
+    async function carregarJogosAoVivo() {
+      try {
+        const res = await fetch('https://v3.football.api-sports.io/fixtures?live=all', {
+          headers: {
+            'x-apisports-key': '4c7ca6ad72501b70347755d6fe350ab3'
+          }
+        });
+        const data = await res.json();
+        const jogos = data.response;
+        const lista = document.getElementById('listaJogos');
+
+        if (jogos.length === 0) {
+          lista.innerHTML = '<li>Nenhum jogo ao vivo no momento.</li>';
+          return;
+        }
+
+        lista.innerHTML = jogos.map(jogo => `
+          <li>
+            <div class="time">${jogo.teams.home.name}</div>
+            <div class="placar">${jogo.goals.home} x ${jogo.goals.away}</div>
+            <div class="time">${jogo.teams.away.name}</div>
+            <div><small>${jogo.league.name} (${jogo.league.country})</small></div>
+          </li>
+        `).join('');
+      } catch (err) {
+        document.getElementById('listaJogos').innerHTML = '<li>Erro ao carregar os jogos.</li>';
+        console.error(err);
+      }
+    }
+
+    carregarJogosAoVivo();
+    setInterval(carregarJogosAoVivo, 60000); // Atualiza a cada 60 segundos
+  </script>
+
+</body>
+</html>
