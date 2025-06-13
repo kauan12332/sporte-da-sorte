@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eporte da Sorte</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #000000;
+      color: #0f0;
+      scroll-behavior: smooth;
+    }
+    header {
+      background-color: #000;
+      border-bottom: 2px solid #0f0;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 10px 20px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #0f0;
+    }
+    main {
+      padding: 80px 20px 40px;
+    }
+    section {
+      margin-bottom: 40px;
+    }
+    h2 {
+      border-bottom: 1px solid #0f0;
+      padding-bottom: 5px;
+    }
+    textarea, input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      background: #131111;
+      color: #0f0;
+      border: 1px solid #0f0;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      border-top: 1px solid #0f0;
+      color: #0f0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Esporte da Sorte</h1>
+    <img src="img/logo.png" alt="logo" style=" height: 50px; vertical-align:baseline; border-radius: 10%;">
+  </header>
+  <main>
+    <section id="regulamento">
+      <h2>Regulamento Geral</h2>
+      <p>O cliente deve enviar os palpites antes do primeiro jogo da grade iniciar. O valor mínimo da aposta é R$5,00. Os pagamentos devem ser realizados via Pix...</p>
+      <!-- Continue o texto do regulamento aqui -->
+    </section>
+
+    <section id="formulario-apostas">
+      <h2>Faça sua Aposta</h2>
+      <form id="formAposta">
+        <div id="jogosContainer">
+          <input type="text" name="jogo[]" placeholder="Digite o jogo e o palpite" required />
+        </div>
+        <button type="button" onclick="adicionarJogo()">Adicionar Outro Jogo</button>
+        <input type="number" name="valor" placeholder="Valor da Aposta (R$)" step="0.01" required oninput="atualizarValor()" />
+        <p>Total Apostado: <span id="valorTotal">R$ 0,00</span></p>
+        <button type="submit">Enviar Aposta</button>
+      </form>
+    </section>
+
+    <section id="apostas-feitas">
+      <h2>Apostas Realizadas</h2>
+      <ul id="listaApostas"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Esporte da Sorte • Todos os direitos reservados</p>
+  </footer>
+
+  <script>
+    function adicionarJogo() {
+      const container = document.getElementById('jogosContainer');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = 'jogo[]';
+      input.placeholder = 'Digite o jogo e o palpite';
+      input.required = true;
+      container.appendChild(input);
+    }
+
+    function atualizarValor() {
+      const valorInput = document.querySelector('input[name="valor"]');
+      const valor = parseFloat(valorInput.value || 0);
+      document.getElementById('valorTotal').textContent = `R$ ${valor.toFixed(2)}`;
+    }
+
+    document.getElementById('formAposta').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const jogos = [...document.getElementsByName('jogo[]')].map(j => j.value);
+      const valor = parseFloat(document.querySelector('input[name="valor"]').value);
+      const li = document.createElement('li');
+      li.textContent = `Aposta de R$ ${valor.toFixed(2)} em: ${jogos.join(' | ')}`;
+      document.getElementById('listaApostas').appendChild(li);
+      this.reset();
+      document.getElementById('valorTotal').textContent = 'R$ 0,00';
+      document.getElementById('jogosContainer').innerHTML = '<input type="text" name="jogo[]" placeholder="Digite o jogo e o palpite" required />';
+    });
+  </script>
+</body>
+</html>
