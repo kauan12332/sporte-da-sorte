@@ -88,35 +88,67 @@
   <footer>
     <p>&copy; 2025 Esporte da Sorte • Todos os direitos reservados. Desenvolvido por Kaua Andrade</p>
   </footer>
-
   <script>
-    function adicionarJogo() {
-      const container = document.getElementById('jogosContainer');
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.name = 'jogo[]';
-      input.placeholder = 'Digite o jogo e o palpite';
-      input.required = true;
-      container.appendChild(input);
+  function adicionarJogo(valor = '') {
+    const container = document.getElementById('jogosContainer');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'jogo[]';
+    input.placeholder = 'Digite o jogo e o palpite';
+    input.required = true;
+    input.value = valor;
+    container.appendChild(input);
+  }
+
+  function atualizarValor() {
+    const valorInput = document.querySelector('input[name="valor"]');
+    const valor = parseFloat(valorInput.value || 0);
+    document.getElementById('valorTotal').textContent = `R$ ${valor.toFixed(2)}`;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const jogoURL = params.get('jogo');
+    const container = document.getElementById('jogosContainer');
+    
+    container.innerHTML = ''; // Limpa qualquer campo anterior
+    
+    if (jogoURL) {
+      // Se veio da ao-vivo.html com ?jogo=...
+      adicionarJogo(decodeURIComponent(jogoURL));
+    } else {
+      // Campo vazio padrão
+      adicionarJogo();
+    }
+  });
+
+  document.getElementById('formAposta').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const jogos = [...document.getElementsByName('jogo[]')]
+      .map(j => j.value.trim())
+      .filter(v => v !== '');
+      
+    const valorInput = document.querySelector('input[name="valor"]');
+    const valor = parseFloat(valorInput.value);
+
+    if (!valor || valor <= 0 || jogos.length === 0) {
+      alert('Preencha os jogos e o valor corretamente.');
+      return;
     }
 
-    function atualizarValor() {
-      const valorInput = document.querySelector('input[name="valor"]');
-      const valor = parseFloat(valorInput.value || 0);
-      document.getElementById('valorTotal').textContent = `R$ ${valor.toFixed(2)}`;
-    }
+    const li = document.createElement('li');
+    li.textContent = `Aposta de R$ ${valor.toFixed(2)} em: ${jogos.join(' | ')}`;
+    document.getElementById('listaApostas').appendChild(li);
 
-    document.getElementById('formAposta').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const jogos = [...document.getElementsByName('jogo[]')].map(j => j.value);
-      const valor = parseFloat(document.querySelector('input[name="valor"]').value);
-      const li = document.createElement('li');
-      li.textContent = `Aposta de R$ ${valor.toFixed(2)} em: ${jogos.join(' | ')}`;
-      document.getElementById('listaApostas').appendChild(li);
-      this.reset();
-      document.getElementById('valorTotal').textContent = 'R$ 0,00';
-      document.getElementById('jogosContainer').innerHTML = '<input type="text" name="jogo[]" placeholder="Digite o jogo e o palpite" required />';
-    });
-  </script>
+    // Resetar formulário
+    this.reset();
+    document.getElementById('valorTotal').textContent = 'R$ 0,00';
+    const container = document.getElementById('jogosContainer');
+    container.innerHTML = '';
+    adicionarJogo();
+  });
+</script>
+
 </body>
 </html>

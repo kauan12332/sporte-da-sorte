@@ -80,8 +80,7 @@
   <div class="container">
     <a href="index.html" class="butt">Voltar</a>
   </div>
-  
-  <script>
+<script>
   async function carregarJogosAoVivo() {
     try {
       const res = await fetch('https://v3.football.api-sports.io/fixtures?live=all', {
@@ -89,49 +88,60 @@
           'x-apisports-key': 'ccd750600e886121712f239603e4418b'
         }
       });
+
       const data = await res.json();
       const jogos = data.response;
       const lista = document.getElementById('listaJogos');
+      lista.innerHTML = ''; // Limpa antes
 
       if (jogos.length === 0) {
         lista.innerHTML = '<li>Nenhum jogo ao vivo no momento.</li>';
         return;
       }
 
-      lista.innerHTML = '';
-
       for (const jogo of jogos) {
-        // Pega os dados principais do jogo
         const { fixture, league, teams, goals } = jogo;
 
-        // Vamos tentar buscar os odds para esse jogo (1x2)
-        const resOdds = await fetch(`https://v3.football.api-sports.io/odds?fixture=${fixture.id}&bookmaker=1&bet=1`, {
-          headers: {
-            'x-apisports-key': 'ccd750600e886121712f239603e4418b'
-          }
-        });
-        const dataOdds = await resOdds.json();
-
+        // Buscar odds para o jogo específico
         let oddCasa = '-', oddEmpate = '-', oddFora = '-';
+        try {
+          const resOdds = await fetch(`https://v3.football.api-sports.io/odds?fixture=${fixture.id}&bookmaker=1&bet=1`, {
+            headers: {
+              'x-apisports-key': 'ccd750600e886121712f239603e4418b'
+            }
+          });
 
-        if (dataOdds.response.length > 0) {
-          const apostas = dataOdds.response[0].bookmakers[0].bets[0].values;
-          oddCasa = apostas.find(ap => ap.value === teams.home.name)?.odd || '-';
-          oddEmpate = apostas.find(ap => ap.value === 'Draw')?.odd || '-';
-          oddFora = apostas.find(ap => ap.value === teams.away.name)?.odd || '-';
+          const dataOdds = await resOdds.json();
+
+          if (dataOdds.response.length > 0) {
+            const apostas = dataOdds.response[0].bookmakers[0].bets[0].values;
+            oddCasa = apostas.find(ap => ap.value === teams.home.name)?.odd || '-';
+            oddEmpate = apostas.find(ap => ap.value === 'Draw')?.odd || '-';
+            oddFora = apostas.find(ap => ap.value === teams.away.name)?.odd || '-';
+          }
+        } catch (e) {
+          console.warn(`Erro ao carregar odds para o jogo ${fixture.id}`, e);
         }
+
+        const nomeJogo = `${teams.home.name} x ${teams.away.name}`;
+        const liga = `${league.name} (${league.country})`;
 
         lista.innerHTML += `
           <li>
             <div class="time">${teams.home.name}</div>
             <div class="placar">${goals.home} x ${goals.away}</div>
             <div class="time">${teams.away.name}</div>
-            <div><small>${league.name} (${league.country})</small></div>
+            <div><small>${liga}</small></div>
 
             <hr>
             <div>
               <strong>Odds:</strong><br>
-              🏠 Casa: ${oddCasa} &nbsp;&nbsp; ⚖️ Empate: ${oddEmpate} &nbsp;&nbsp; 🛫 Fora: ${oddFora}
+              🏠 Casa: ${oddCasa} 
+              <button onclick="apostar('${nomeJogo} - Casa')">Apostar</button><br>
+              ⚖️ Empate: ${oddEmpate} 
+              <button onclick="apostar('${nomeJogo} - Empate')">Apostar</button><br>
+              🛫 Fora: ${oddFora} 
+              <button onclick="apostar('${nomeJogo} - Fora')">Apostar</button>
             </div>
 
             <div style="margin-top:10px;">
@@ -148,6 +158,11 @@
       document.getElementById('listaJogos').innerHTML = '<li>Erro ao carregar os jogos.</li>';
       console.error(err);
     }
+  }
+
+  function apostar(jogoInfo) {
+    const url = `apostas.html?jogo=${encodeURIComponent(jogoInfo)}`;
+    window.location.href = url;
   }
 
   function calcularRetorno(input, oddC, oddE, oddF) {
@@ -171,7 +186,7 @@
   }
 
   carregarJogosAoVivo();
-  setInterval(carregarJogosAoVivo, 60000);
+  setInterval(carregarJogosAoVivo, 60000); // Atualiza a cada 60s
 </script>
 
 </body>
