@@ -85,13 +85,14 @@
         </div>
         <input type="text" name="nome" placeholder="Seu nome completo" required />
 
-        <a href="ao-vivo.html" class="refazer">Adicionar Outro Jogo</a>
+        <p id="contadorJogos">Jogos adicionados: 0/15</p>
+
         <input type="number" name="valor" placeholder="Valor da Aposta (R$)" step="0.01" required oninput="atualizarValor()" />
         <p>Total Apostado: <span id="valorTotal">R$ 0,00</span></p>
         <button type="submit">Enviar Aposta</button>
       </form>
     </section>
-
+<button id="btnIrParaAoVivo" type="button" onclick="irParaAoVivo()">➕ Adicionar Jogo </button>
     <section id="apostas-feitas">
       <h2>Apostas Realizadas</h2>
       <ul id="listaApostas"></ul>
@@ -106,8 +107,8 @@
   <footer>
     <p>&copy; 2025 Esporte da Sorte • Todos os direitos reservados. Desenvolvido por Kaua Andrade</p>
   </footer>
-  
-  <script>
+
+<script>
   async function gerarPDF(bilheteId, nome, dataHora, valor, retorno, jogos) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -126,6 +127,19 @@
 
     doc.save(`${bilheteId}.pdf`);
   }
+
+  function irParaAoVivo() {
+  const jogos = [...document.getElementsByName('jogo[]')]
+    .map(input => encodeURIComponent(input.value.trim()))
+    .filter(val => val !== '');
+
+  const valor = document.querySelector('input[name="valor"]').value || 0;
+  const nome = document.querySelector('input[name="nome"]').value || '';
+
+  const jogosParam = jogos.join('|');
+
+  window.location.href = `ao-vivo.html?jogos=${jogosParam}&valor=${valor}&nome=${encodeURIComponent(nome)}`;
+}
 
   function imprimirBilhete(bilheteDiv) {
     const printWindow = window.open('', '', 'width=600,height=800');
@@ -148,15 +162,50 @@
     return data.toLocaleString('pt-BR');
   }
 
+  function atualizarContador() {
+    const total = document.querySelectorAll('#jogosContainer .jogoItem').length;
+    document.getElementById('contadorJogos').textContent = `Jogos adicionados: ${total}/15`;
+
+    // Desativa botão se atingir 15
+    document.getElementById('btnAdicionarJogo').disabled = total >= 15;
+  }
+
+  function removerJogo(elemento) {
+    elemento.parentElement.remove();
+    atualizarContador();
+  }
+
   function adicionarJogo(valor = '') {
     const container = document.getElementById('jogosContainer');
+    const totalJogos = container.querySelectorAll('.jogoItem').length;
+
+    if (totalJogos >= 15) {
+      alert('Você só pode adicionar até 15 jogos por bilhete.');
+      return;
+    }
+
+    const div = document.createElement('div');
+    div.className = 'jogoItem';
+    div.style.marginBottom = '5px';
+
     const input = document.createElement('input');
     input.type = 'text';
     input.name = 'jogo[]';
-    input.placeholder = 'Digite o jogo e o palpite';
+    input.placeholder = `Jogo ${totalJogos + 1}`;
     input.required = true;
     input.value = valor;
-    container.appendChild(input);
+    input.style.marginRight = '5px';
+
+    const btnRemover = document.createElement('button');
+    btnRemover.type = 'button';
+    btnRemover.textContent = '❌';
+    btnRemover.onclick = () => removerJogo(div);
+
+    div.appendChild(input);
+    div.appendChild(btnRemover);
+    container.appendChild(div);
+
+    atualizarContador();
   }
 
   function atualizarValor() {
@@ -166,17 +215,25 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const jogoURL = params.get('jogo');
-    const container = document.getElementById('jogosContainer');
+  const params = new URLSearchParams(window.location.search);
+  const jogoURL = params.get('jogo');
+  const todosJogosURL = params.get('jogos');
+  const valor = params.get('valor');
+  const nome = params.get('nome');
+  const container = document.getElementById('jogosContainer');
 
-    container.innerHTML = '';
-    if (jogoURL) {
-      adicionarJogo(decodeURIComponent(jogoURL));
-    } else {
-      adicionarJogo();
-    }
-  });
+  document.querySelector('input[name="valor"]').value = valor || '';
+  document.querySelector('input[name="nome"]').value = nome || '';
+
+  container.innerHTML = '';
+
+  const jogos = todosJogosURL ? todosJogosURL.split('|').map(decodeURIComponent) : [];
+  if (jogoURL) jogos.push(decodeURIComponent(jogoURL));
+
+  jogos.forEach(j => adicionarJogo(j));
+  atualizarContador();
+});
+
 
   document.getElementById('formAposta').addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -190,6 +247,11 @@
 
     if (!nome || !valor || valor <= 0 || jogos.length === 0) {
       alert('Preencha corretamente todos os campos: nome, valor e pelo menos um jogo.');
+      return;
+    }
+
+    if (jogos.length > 15) {
+      alert('O bilhete pode conter no máximo 15 jogos.');
       return;
     }
 
@@ -211,7 +273,7 @@
       📈 Retorno Estimado: <strong>R$ ${retornoEstimado}</strong><br>
       🧩 Jogos:<br>
       <ul>${jogos.map(j => `<li>${j}</li>`).join('')}</ul>
-      <button onclick="gerarPDF('${bilheteId}', '${nome}', '${dataHora}', ${valor}, '${retornoEstimado}', ${JSON.stringify(jogos)})">
+      <button onclick="gerarPDF('${bilheteId}', '${nome}', '${dataHora}', ${valor}, '${retornoEstimado}', ${JSON.stringify(jogos)});">
         📄 Gerar PDF
       </button>
       <button onclick="imprimirBilhete(this.parentElement)">🖨️ Imprimir</button>

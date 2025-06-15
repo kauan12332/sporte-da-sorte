@@ -165,6 +165,18 @@
     window.location.href = url;
   }
 
+  function selecionarJogo(jogoSelecionado) {
+    const params = new URLSearchParams(window.location.search);
+    const jogosAntigos = params.get('jogos') || '';
+    const valor = params.get('valor') || 0;
+    const nome = params.get('nome') || '';
+
+    const todosJogos = [...(jogosAntigos ? jogosAntigos.split('|') : []), jogoSelecionado];
+    const jogosParam = todosJogos.map(encodeURIComponent).join('|');
+
+    window.location.href = `apostas.html?jogos=${jogosParam}&valor=${valor}&nome=${encodeURIComponent(nome)}&jogo=${encodeURIComponent(jogoSelecionado)}`;
+  }
+
   function calcularRetorno(input, oddC, oddE, oddF) {
     const valor = parseFloat(input.value);
     if (isNaN(valor) || valor <= 0) return;
